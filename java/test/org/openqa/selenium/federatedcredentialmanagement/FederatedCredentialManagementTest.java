@@ -37,6 +37,9 @@ import org.openqa.selenium.chrome.ChromeOptions;
 import org.openqa.selenium.support.ui.WebDriverWait;
 import org.openqa.selenium.testing.JupiterTestBase;
 
+import org.openqa.selenium.testing.NeedsSecureServer;
+
+@NeedsSecureServer
 class FederatedCredentialManagementTest extends JupiterTestBase {
 
   private JavascriptExecutor jsAwareDriver;

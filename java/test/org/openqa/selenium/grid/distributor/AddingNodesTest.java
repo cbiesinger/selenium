@@ -446,6 +446,14 @@ class AddingNodesTest {
     }
 
     @Override
+    public boolean tryAcquireConnection(SessionId id) {
+      return false;
+    }
+
+    @Override
+    public void releaseConnection(SessionId id) {}
+
+    @Override
     public boolean isSupporting(Capabilities capabilities) {
       return Objects.equals("cake", capabilities.getCapability("cheese"));
     }

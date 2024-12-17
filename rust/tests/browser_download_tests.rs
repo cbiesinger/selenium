@@ -48,28 +48,33 @@ fn browser_latest_download_test(#[case] browser: String) {
 
 #[rstest]
 #[case("chrome", "113")]
+#[case("chrome", "131.0.6725.0")]
 #[case("chrome", "beta")]
 #[case("firefox", "116")]
+#[case("firefox", "121.0.1")]
 #[case("firefox", "beta")]
 #[case("firefox", "esr")]
+#[case("edge", "129.0.2792.79")]
 #[case("edge", "beta")]
 fn browser_version_download_test(#[case] browser: String, #[case] browser_version: String) {
-    let mut cmd = get_selenium_manager();
-    cmd.args([
-        "--browser",
-        &browser,
-        "--browser-version",
-        &browser_version,
-        "--output",
-        "json",
-        "--debug",
-    ])
-    .assert()
-    .success()
-    .code(0);
+    if OS.eq("windows") && browser.eq("edge") {
+        println!("Skipping Edge download test on Windows since the installation requires admin privileges");
+    } else {
+        let mut cmd = get_selenium_manager();
+        cmd.args([
+            "--browser",
+            &browser,
+            "--browser-version",
+            &browser_version,
+            "--output",
+            "json",
+            "--debug",
+        ])
+        .assert()
+        .success()
+        .code(0);
 
-    assert_driver(&mut cmd);
-    if !OS.eq("windows") && !browser.eq("edge") {
+        assert_driver(&mut cmd);
         assert_browser(&mut cmd);
     }
 }

@@ -1,29 +1,31 @@
-// <copyright file="IDevToolsSession.cs" company="WebDriver Committers">
+// <copyright file="IDevToolsSession.cs" company="Selenium Committers">
 // Licensed to the Software Freedom Conservancy (SFC) under one
-// or more contributor license agreements. See the NOTICE file
+// or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
-// regarding copyright ownership. The SFC licenses this file
-// to you under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
+// regarding copyright ownership.  The SFC licenses this file
+// to you under the Apache License, Version 2.0 (the
+// "License"); you may not use this file except in compliance
+// with the License.  You may obtain a copy of the License at
 //
-//     http://www.apache.org/licenses/LICENSE-2.0
+//   http://www.apache.org/licenses/LICENSE-2.0
 //
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+// Unless required by applicable law or agreed to in writing,
+// software distributed under the License is distributed on an
+// "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+// KIND, either express or implied.  See the License for the
+// specific language governing permissions and limitations
+// under the License.
+// </copyright>
 
-using Newtonsoft.Json.Linq;
 using System;
+using System.Text.Json.Nodes;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace OpenQA.Selenium.DevTools
 {
     /// <summary>
-    /// Represents a WebSocket connection to a running DevTools instance that can be used to send 
+    /// Represents a WebSocket connection to a running DevTools instance that can be used to send
     /// commands and recieve events.
     ///</summary>
     public interface IDevToolsSession : IDisposable
@@ -74,14 +76,14 @@ namespace OpenQA.Selenium.DevTools
             where TCommandResponse : ICommandResponse<TCommand>;
 
         /// <summary>
-        /// Returns a JToken based on a command created with the specified command name and params.
+        /// Returns a JsonNode based on a command created with the specified command name and params.
         /// </summary>
         /// <param name="commandName">The name of the command to send.</param>
-        /// <param name="params">The parameters of the command as a JToken object</param>
+        /// <param name="params">The parameters of the command as a JsonNode object</param>
         /// <param name="cancellationToken">A CancellationToken object to allow for cancellation of the command.</param>
         /// <param name="millisecondsTimeout">The execution timeout of the command in milliseconds.</param>
         /// <param name="throwExceptionIfResponseNotReceived"><see langword="true"/> to throw an exception if a response is not received; otherwise, <see langword="false"/>.</param>
         /// <returns>The command response object implementing the <see cref="ICommandResponse{T}"/> interface.</returns>
-        Task<JToken> SendCommand(string commandName, JToken @params, CancellationToken cancellationToken, int? millisecondsTimeout, bool throwExceptionIfResponseNotReceived);
+        Task<JsonNode> SendCommand(string commandName, JsonNode @params, CancellationToken cancellationToken, int? millisecondsTimeout, bool throwExceptionIfResponseNotReceived);
     }
 }

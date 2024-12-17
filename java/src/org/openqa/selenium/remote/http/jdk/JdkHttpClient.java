@@ -44,6 +44,7 @@ import java.util.concurrent.CompletionStage;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Supplier;
@@ -164,6 +165,7 @@ public class JdkHttpClient implements HttpClient {
       throw new ConnectionFailedException("JdkWebSocket initial request execution error", e);
     }
 
+    CompletableFuture<Integer> closed = new CompletableFuture<>();
     CompletableFuture<java.net.http.WebSocket> webSocketCompletableFuture =
         client
             .newWebSocketBuilder()
@@ -222,6 +224,7 @@ public class JdkHttpClient implements HttpClient {
                   public CompletionStage<?> onClose(
                       java.net.http.WebSocket webSocket, int statusCode, String reason) {
                     LOG.fine("Closing websocket");
+                    closed.complete(statusCode);
                     listener.onClose(statusCode, reason);
                     return null;
                   }
@@ -277,7 +280,24 @@ public class JdkHttpClient implements HttpClient {
                     Level.FINE,
                     "Sending close message, statusCode {0}, reason: {1}",
                     new Object[] {statusCode, closeMessage.reason()});
-                makeCall = () -> underlyingSocket.sendClose(statusCode, closeMessage.reason());
+                makeCall =
+                    () -> {
+                      CompletableFuture<java.net.http.WebSocket> future =
+                          underlyingSocket.sendClose(statusCode, closeMessage.reason());
+                      try {
+                        closed.get(4, TimeUnit.SECONDS);
+                      } catch (ExecutionException e) {
+                        LOG.log(
+                            Level.WARNING,
+                            "failed to wait for the websocket to close",
+                            e.getCause());
+                      } catch (InterruptedException e) {
+                        Thread.currentThread().interrupt();
+                      } catch (java.util.concurrent.TimeoutException e) {
+                        LOG.finer("wait for the websocket to close timed out");
+                      }
+                      return future;
+                    };
               } else {
                 LOG.fine("Output is closed, not sending close message");
                 return this;
@@ -351,8 +371,64 @@ public class JdkHttpClient implements HttpClient {
   }
 
   @Override
+  public CompletableFuture<HttpResponse> executeAsync(HttpRequest request) {
+    // the facade for this http request
+    CompletableFuture<HttpResponse> cf = new CompletableFuture<>();
+
+    // the actual http request
+    Future<?> future =
+        executorService.submit(
+            () -> {
+              try {
+                HttpResponse response = handler.execute(request);
+
+                cf.complete(response);
+              } catch (Throwable t) {
+                cf.completeExceptionally(t);
+              }
+            });
+
+    cf.whenComplete(
+        (result, throwable) -> {
+          if (throwable instanceof java.util.concurrent.CancellationException) {
+            // try to interrupt the http request in case someone canceled the future returned
+            future.cancel(true);
+          } else if (throwable instanceof java.util.concurrent.TimeoutException) {
+            // try to interrupt the http request in case of a timeout, to avoid
+            // https://bugs.openjdk.org/browse/JDK-8258397
+            future.cancel(true);
+          }
+        });
+
+    // will complete exceptionally with a java.util.concurrent.TimeoutException
+    return cf.orTimeout(readTimeout.toMillis(), TimeUnit.MILLISECONDS);
+  }
+
+  @Override
   public HttpResponse execute(HttpRequest req) throws UncheckedIOException {
-    return handler.execute(req);
+    Future<HttpResponse> async = executeAsync(req);
+    try {
+      // executeAsync does define a timeout, no need to use a timeout here
+      return async.get();
+    } catch (CancellationException e) {
+      throw new WebDriverException(e.getMessage(), e);
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+      async.cancel(true);
+      throw new WebDriverException(e.getMessage(), e);
+    } catch (ExecutionException e) {
+      Throwable cause = e.getCause();
+
+      if (cause instanceof java.util.concurrent.TimeoutException) {
+        throw new TimeoutException(cause);
+      } else if (cause instanceof RuntimeException) {
+        throw (RuntimeException) cause;
+      } else if (cause instanceof Error) {
+        throw (Error) cause;
+      }
+
+      throw new WebDriverException((cause != null) ? cause : e);
+    }
   }
 
   private HttpResponse execute0(HttpRequest req) throws UncheckedIOException {
@@ -371,38 +447,17 @@ public class JdkHttpClient implements HttpClient {
       // - avoid a downgrade of POST requests, see the javadoc of j.n.h.HttpClient.Redirect
       // - not run into https://bugs.openjdk.org/browse/JDK-8304701
       for (int i = 0; i < 100; i++) {
-        java.net.http.HttpRequest request = messages.createRequest(req, method, rawUri);
-        java.net.http.HttpResponse<byte[]> response;
-
-        // use sendAsync to not run into https://bugs.openjdk.org/browse/JDK-8258397
-        CompletableFuture<java.net.http.HttpResponse<byte[]>> future =
-            client.sendAsync(request, byteHandler);
-
-        try {
-          response = future.get(readTimeout.toMillis(), TimeUnit.MILLISECONDS);
-        } catch (CancellationException e) {
-          throw new WebDriverException(e.getMessage(), e);
-        } catch (ExecutionException e) {
-          Throwable cause = e.getCause();
-
-          if (cause instanceof HttpTimeoutException) {
-            throw new TimeoutException(cause);
-          } else if (cause instanceof IOException) {
-            throw (IOException) cause;
-          } else if (cause instanceof RuntimeException) {
-            throw (RuntimeException) cause;
-          }
-
-          throw new WebDriverException((cause != null) ? cause : e);
-        } catch (java.util.concurrent.TimeoutException e) {
-          future.cancel(true);
-          throw new TimeoutException(e);
+        if (Thread.interrupted()) {
+          throw new InterruptedException("http request has been interrupted");
         }
+
+        java.net.http.HttpRequest request = messages.createRequest(req, method, rawUri);
+        java.net.http.HttpResponse<byte[]> response = client.send(request, byteHandler);
 
         switch (response.statusCode()) {
           case 303:
             method = HttpMethod.GET;
-            // fall-through
+          // fall-through
           case 301:
           case 302:
           case 307:
@@ -435,11 +490,13 @@ public class JdkHttpClient implements HttpClient {
       }
 
       throw new ProtocolException("Too many redirects: 101");
+    } catch (HttpTimeoutException e) {
+      throw new TimeoutException(e);
     } catch (IOException e) {
       throw new UncheckedIOException(e);
     } catch (InterruptedException e) {
       Thread.currentThread().interrupt();
-      throw new RuntimeException(e);
+      throw new WebDriverException(e.getMessage(), e);
     } finally {
       LOG.log(
           Level.FINE,

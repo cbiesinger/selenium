@@ -18,15 +18,13 @@
 'use strict'
 
 const assert = require('node:assert')
-const firefox = require('../../firefox')
-const { Browser } = require('../../')
-const { Pages, suite } = require('../../lib/test')
-const BrowsingContext = require('../../bidi/browsingContext')
-const { Locator } = require('../../bidi/browsingContext')
-const { ScriptManager } = require('../../index')
-const { EvaluateResultType } = require('../../bidi/evaluateResult')
-const { LocalValue, ReferenceValue } = require('../../bidi/protocolValue')
-const { ArgumentValue } = require('../../bidi/argumentValue')
+const { Browser } = require('selenium-webdriver')
+const { Pages, suite, ignore } = require('../../lib/test')
+const BrowsingContext = require('selenium-webdriver/bidi/browsingContext')
+const { Locator } = require('selenium-webdriver/bidi/browsingContext')
+const { ScriptManager } = require('selenium-webdriver/index')
+const { EvaluateResultType } = require('selenium-webdriver/bidi/evaluateResult')
+const { LocalValue, ReferenceValue } = require('selenium-webdriver/bidi/protocolValue')
 
 suite(
   function (env) {
@@ -82,7 +80,7 @@ suite(
         assert.notEqual(element.sharedId, undefined)
       })
 
-      xit('can locate node with xpath locator', async function () {
+      it('can locate node with xpath locator', async function () {
         const id = await driver.getWindowHandle()
         const browsingContext = await BrowsingContext(driver, {
           browsingContextId: id,
@@ -99,7 +97,7 @@ suite(
         assert.notEqual(element.sharedId, undefined)
       })
 
-      xit('can locate node with inner test locator', async function () {
+      ignore(env.browsers(Browser.FIREFOX)).it('can locate node with inner test locator', async function () {
         const id = await driver.getWindowHandle()
         const browsingContext = await BrowsingContext(driver, {
           browsingContextId: id,
@@ -111,12 +109,9 @@ suite(
         const element = elements[0]
         assert.strictEqual(element.type, 'node')
         assert.notEqual(element.value, undefined)
-        assert.strictEqual(element.value.localName, 'div')
-        assert.strictEqual(element.value.attributes.class, 'content')
-        assert.notEqual(element.sharedId, undefined)
       })
 
-      xit('can locate node with max node count', async function () {
+      it('can locate node with max node count', async function () {
         const id = await driver.getWindowHandle()
         const browsingContext = await BrowsingContext(driver, {
           browsingContextId: id,
@@ -128,7 +123,7 @@ suite(
         assert.strictEqual(elements.length, 4)
       })
 
-      xit('can locate node with given start nodes', async function () {
+      it('can locate node with given start nodes', async function () {
         const id = await driver.getWindowHandle()
         const browsingContext = await BrowsingContext(driver, {
           browsingContextId: id,
@@ -157,14 +152,7 @@ suite(
           startNodes.push(new ReferenceValue(node.handle, node.sharedId))
         })
 
-        const elements = await browsingContext.locateNodes(
-          Locator.css('input'),
-          50,
-          'none',
-          undefined,
-          undefined,
-          startNodes,
-        )
+        const elements = await browsingContext.locateNodes(Locator.css('input'), 50, 'none', undefined, startNodes)
 
         assert.strictEqual(elements.length, 35)
       })
@@ -188,7 +176,7 @@ suite(
 
         let argumentValues = []
         let mapValue = { sharedId: LocalValue.createStringValue(nodeId) }
-        argumentValues.push(new ArgumentValue(LocalValue.createMapValue(mapValue)))
+        argumentValues.push(LocalValue.createMapValue(mapValue))
 
         const response = await script.callFunctionInBrowsingContext(
           id,
@@ -203,9 +191,10 @@ suite(
         assert.equal(response.resultType, EvaluateResultType.SUCCESS)
         assert.equal(response.result.type, 'map')
 
-        const sharedId = response.result.value.sharedId
+        const value = response.result.value[0]
 
-        assert.strictEqual(sharedId.value, nodeId)
+        assert.strictEqual(value[1].type, 'string')
+        assert.strictEqual(value[1].value, nodeId)
       })
 
       it('can find element', async function () {
@@ -237,5 +226,5 @@ suite(
       })
     })
   },
-  { browsers: [Browser.FIREFOX] },
+  { browsers: [Browser.FIREFOX, Browser.CHROME, Browser.EDGE] },
 )

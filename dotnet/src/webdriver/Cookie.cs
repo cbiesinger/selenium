@@ -1,27 +1,28 @@
-// <copyright file="Cookie.cs" company="WebDriver Committers">
+// <copyright file="Cookie.cs" company="Selenium Committers">
 // Licensed to the Software Freedom Conservancy (SFC) under one
-// or more contributor license agreements. See the NOTICE file
+// or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
-// regarding copyright ownership. The SFC licenses this file
-// to you under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
+// regarding copyright ownership.  The SFC licenses this file
+// to you under the Apache License, Version 2.0 (the
+// "License"); you may not use this file except in compliance
+// with the License.  You may obtain a copy of the License at
 //
-//     http://www.apache.org/licenses/LICENSE-2.0
+//   http://www.apache.org/licenses/LICENSE-2.0
 //
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+// Unless required by applicable law or agreed to in writing,
+// software distributed under the License is distributed on an
+// "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+// KIND, either express or implied.  See the License for the
+// specific language governing permissions and limitations
+// under the License.
 // </copyright>
 
-using Newtonsoft.Json;
 using OpenQA.Selenium.Internal;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Text.Json.Serialization;
 
 namespace OpenQA.Selenium
 {
@@ -29,7 +30,6 @@ namespace OpenQA.Selenium
     /// Represents a cookie in the browser.
     /// </summary>
     [Serializable]
-    [JsonObject(MemberSerialization = MemberSerialization.OptIn)]
     public class Cookie
     {
         private string cookieName;
@@ -171,7 +171,7 @@ namespace OpenQA.Selenium
         /// <summary>
         /// Gets the name of the cookie.
         /// </summary>
-        [JsonProperty("name")]
+        [JsonPropertyName("name")]
         public string Name
         {
             get { return this.cookieName; }
@@ -180,7 +180,7 @@ namespace OpenQA.Selenium
         /// <summary>
         /// Gets the value of the cookie.
         /// </summary>
-        [JsonProperty("value")]
+        [JsonPropertyName("value")]
         public string Value
         {
             get { return this.cookieValue; }
@@ -189,7 +189,8 @@ namespace OpenQA.Selenium
         /// <summary>
         /// Gets the domain of the cookie.
         /// </summary>
-        [JsonProperty("domain", NullValueHandling = NullValueHandling.Ignore)]
+        [JsonPropertyName("domain")]
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public string Domain
         {
             get { return this.cookieDomain; }
@@ -198,7 +199,8 @@ namespace OpenQA.Selenium
         /// <summary>
         /// Gets the path of the cookie.
         /// </summary>
-        [JsonProperty("path", NullValueHandling = NullValueHandling.Ignore)]
+        [JsonPropertyName("path")]
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public virtual string Path
         {
             get { return this.cookiePath; }
@@ -207,7 +209,7 @@ namespace OpenQA.Selenium
         /// <summary>
         /// Gets a value indicating whether the cookie is secure.
         /// </summary>
-        [JsonProperty("secure")]
+        [JsonPropertyName("secure")]
         public virtual bool Secure
         {
             get { return this.secure; }
@@ -216,7 +218,7 @@ namespace OpenQA.Selenium
         /// <summary>
         /// Gets a value indicating whether the cookie is an HTTP-only cookie.
         /// </summary>
-        [JsonProperty("httpOnly")]
+        [JsonPropertyName("httpOnly")]
         public virtual bool IsHttpOnly
         {
             get { return this.isHttpOnly; }
@@ -226,7 +228,8 @@ namespace OpenQA.Selenium
         /// <summary>
         /// Gets the SameSite setting for the cookie.
         /// </summary>
-        [JsonProperty("sameSite", NullValueHandling = NullValueHandling.Ignore)]
+        [JsonPropertyName("sameSite")]
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public virtual string SameSite
         {
             get { return this.sameSite; }
@@ -235,6 +238,7 @@ namespace OpenQA.Selenium
         /// <summary>
         /// Gets the expiration date of the cookie.
         /// </summary>
+        [JsonIgnore]
         public DateTime? Expiry
         {
             get { return this.cookieExpiry; }
@@ -245,7 +249,9 @@ namespace OpenQA.Selenium
         /// </summary>
         /// <remarks>This property only exists so that the JSON serializer can serialize a
         /// cookie without resorting to a custom converter.</remarks>
-        [JsonProperty("expiry", NullValueHandling = NullValueHandling.Ignore)]
+        [JsonPropertyName("expiry")]
+        [JsonInclude]
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         internal long? ExpirySeconds
         {
             get
@@ -345,14 +351,12 @@ namespace OpenQA.Selenium
         public override bool Equals(object obj)
         {
             // Two cookies are equal if the name and value match
-            Cookie cookie = obj as Cookie;
-
             if (this == obj)
             {
                 return true;
             }
 
-            if (cookie == null)
+            if (obj is not Cookie cookie)
             {
                 return false;
             }
@@ -362,7 +366,7 @@ namespace OpenQA.Selenium
                 return false;
             }
 
-            return !(this.cookieValue != null ? !this.cookieValue.Equals(cookie.cookieValue) : cookie.Value != null);
+            return string.Equals(this.cookieValue, cookie.cookieValue);
         }
 
         /// <summary>
