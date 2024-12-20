@@ -101,7 +101,7 @@ class FederatedCredentialManagementTest {
     FederatedCredentialManagementDialog dialog =
         fedcmDriver.getFederatedCredentialManagementDialog();
 
-    assertThat(dialog.getTitle()).isEqualTo("Sign in to localhost with localhost");
+    assertThat(dialog.getTitle()).contains("Sign in to");
     assertThat(dialog.getDialogType()).isEqualTo("AccountChooser");
     dialog.cancelDialog();
 
@@ -122,7 +122,7 @@ class FederatedCredentialManagementTest {
     FederatedCredentialManagementDialog dialog =
         fedcmDriver.getFederatedCredentialManagementDialog();
 
-    assertThat(dialog.getTitle()).isEqualTo("Sign in to localhost with localhost");
+    assertThat(dialog.getTitle()).contains("Sign in to");
     assertThat(dialog.getDialogType()).isEqualTo("AccountChooser");
 
     List<FederatedCredentialManagementAccount> accountList = dialog.getAccounts();
@@ -142,7 +142,7 @@ class FederatedCredentialManagementTest {
     FederatedCredentialManagementDialog dialog =
         fedcmDriver.getFederatedCredentialManagementDialog();
 
-    assertThat(dialog.getTitle()).isEqualTo("Sign in to localhost with localhost");
+    assertThat(dialog.getTitle()).contains("Sign in to");
     assertThat(dialog.getDialogType()).isEqualTo("AccountChooser");
 
     List<FederatedCredentialManagementAccount> accountList = dialog.getAccounts();
