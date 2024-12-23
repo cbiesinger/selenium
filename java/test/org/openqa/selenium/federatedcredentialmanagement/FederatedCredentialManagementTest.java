@@ -23,30 +23,25 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.openqa.selenium.testing.drivers.Browser.CHROME;
 
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.time.Duration;
 import java.util.List;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.openqa.selenium.By;
+import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.NoAlertPresentException;
 import org.openqa.selenium.WebDriver;
-import org.openqa.selenium.WebElement;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
 import org.openqa.selenium.environment.InProcessTestEnvironment;
 import org.openqa.selenium.environment.webserver.AppServer;
 import org.openqa.selenium.support.ui.WebDriverWait;
-import org.openqa.selenium.testing.NeedsSecureServer;
 
-@NeedsSecureServer
 class FederatedCredentialManagementTest {
 
   private HasFederatedCredentialManagement fedcmDriver;
   private WebDriver localDriver;
-  InProcessTestEnvironment environment = new InProcessTestEnvironment(true);
+  InProcessTestEnvironment environment = new InProcessTestEnvironment(false);
   AppServer appServer = environment.getAppServer();
 
   @BeforeEach
@@ -57,7 +52,7 @@ class FederatedCredentialManagementTest {
 
     assumeThat(localDriver).isInstanceOf(HasFederatedCredentialManagement.class);
     fedcmDriver = (HasFederatedCredentialManagement) localDriver;
-    localDriver.get(appServer.whereIsSecure("/fedcm/fedcm.html"));
+    localDriver.get(appServer.whereIs("/fedcm/fedcm.html"));
   }
 
   @AfterEach
@@ -74,23 +69,12 @@ class FederatedCredentialManagementTest {
                 != null);
   }
 
-  private int getSecurePort() {
-    String urlString = appServer.whereIsSecure("/");
-    try {
-      return new URL(urlString).getPort();
-    } catch (MalformedURLException ex) {
-      // This should not happen.
-      return 0;
-    }
-  }
-
   @Test
   void testDismissDialog() {
     fedcmDriver.setDelayEnabled(false);
     assertNull(fedcmDriver.getFederatedCredentialManagementDialog());
 
-    WebElement triggerButton = localDriver.findElement(By.id("triggerButton"));
-    triggerButton.click();
+    ((JavascriptExecutor) localDriver).executeScript("triggerFedCm();");
 
     waitForDialog();
 
@@ -111,8 +95,7 @@ class FederatedCredentialManagementTest {
   void testSelectAccount() {
     assertNull(fedcmDriver.getFederatedCredentialManagementDialog());
 
-    WebElement triggerButton = localDriver.findElement(By.id("triggerButton"));
-    triggerButton.click();
+    ((JavascriptExecutor) localDriver).executeScript("triggerFedCm();");
 
     waitForDialog();
 
@@ -132,8 +115,7 @@ class FederatedCredentialManagementTest {
   void testGetAccounts() {
     assertNull(fedcmDriver.getFederatedCredentialManagementDialog());
 
-    WebElement triggerButton = localDriver.findElement(By.id("triggerButton"));
-    triggerButton.click();
+    ((JavascriptExecutor) localDriver).executeScript("triggerFedCm();");
 
     waitForDialog();
 

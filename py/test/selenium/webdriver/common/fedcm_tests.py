@@ -24,8 +24,6 @@ from selenium.common.exceptions import NoAlertPresentException
 @pytest.mark.xfail_firefox(reason="FedCM not supported")
 @pytest.mark.xfail_ie(reason="FedCM not supported")
 @pytest.mark.xfail_remote(reason="FedCM not supported, since remote uses Firefox")
-@pytest.mark.xfail_chrome(reason="FedCM supported but test suite needs to support secure webserver")
-@pytest.mark.xfail_edge(reason="FedCM supported but test suite needs to support secure webserver")
 class TestFedCM:
     @pytest.fixture(autouse=True)
     def setup(self, driver, webserver):
