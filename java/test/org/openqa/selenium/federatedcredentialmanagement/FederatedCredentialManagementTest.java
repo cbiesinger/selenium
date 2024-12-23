@@ -98,6 +98,7 @@ class FederatedCredentialManagementTest {
         fedcmDriver.getFederatedCredentialManagementDialog();
 
     assertThat(dialog.getTitle()).contains("Sign in to");
+    assertThat(dialog.getSubtitle()).isNull();
     assertThat(dialog.getDialogType()).isEqualTo("AccountChooser");
     dialog.cancelDialog();
 
@@ -119,6 +120,7 @@ class FederatedCredentialManagementTest {
         fedcmDriver.getFederatedCredentialManagementDialog();
 
     assertThat(dialog.getTitle()).contains("Sign in to");
+    assertThat(dialog.getSubtitle()).isNull();
     assertThat(dialog.getDialogType()).isEqualTo("AccountChooser");
 
     List<FederatedCredentialManagementAccount> accountList = dialog.getAccounts();
@@ -139,6 +141,7 @@ class FederatedCredentialManagementTest {
         fedcmDriver.getFederatedCredentialManagementDialog();
 
     assertThat(dialog.getTitle()).contains("Sign in to");
+    assertThat(dialog.getSubtitle()).isNull();
     assertThat(dialog.getDialogType()).isEqualTo("AccountChooser");
 
     List<FederatedCredentialManagementAccount> accountList = dialog.getAccounts();
