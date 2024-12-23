@@ -28,9 +28,10 @@ import java.util.List;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.openqa.selenium.JavascriptExecutor;
+import org.openqa.selenium.By;
 import org.openqa.selenium.NoAlertPresentException;
 import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.WebElement;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
 import org.openqa.selenium.environment.InProcessTestEnvironment;
@@ -52,7 +53,7 @@ class FederatedCredentialManagementTest {
 
     assumeThat(localDriver).isInstanceOf(HasFederatedCredentialManagement.class);
     fedcmDriver = (HasFederatedCredentialManagement) localDriver;
-    localDriver.get(appServer.whereIs("/fedcm/fedcm.html"));
+    localDriver.get(appServer.whereIs("/fedcm/fedcm_async.html"));
   }
 
   @AfterEach
@@ -74,7 +75,10 @@ class FederatedCredentialManagementTest {
     fedcmDriver.setDelayEnabled(false);
     assertNull(fedcmDriver.getFederatedCredentialManagementDialog());
 
-    ((JavascriptExecutor) localDriver).executeScript("triggerFedCm();");
+    // ((JavascriptExecutor) localDriver).executeScript("triggerFedCm();");
+
+    WebElement triggerButton = localDriver.findElement(By.id("triggerButton"));
+    triggerButton.click();
 
     waitForDialog();
 
@@ -95,8 +99,10 @@ class FederatedCredentialManagementTest {
   void testSelectAccount() {
     assertNull(fedcmDriver.getFederatedCredentialManagementDialog());
 
-    ((JavascriptExecutor) localDriver).executeScript("triggerFedCm();");
+    // ((JavascriptExecutor) localDriver).executeScript("triggerFedCm();");
 
+    WebElement triggerButton = localDriver.findElement(By.id("triggerButton"));
+    triggerButton.click();
     waitForDialog();
 
     FederatedCredentialManagementDialog dialog =
@@ -115,7 +121,10 @@ class FederatedCredentialManagementTest {
   void testGetAccounts() {
     assertNull(fedcmDriver.getFederatedCredentialManagementDialog());
 
-    ((JavascriptExecutor) localDriver).executeScript("triggerFedCm();");
+    // ((JavascriptExecutor) localDriver).executeScript("triggerFedCm();");
+
+    WebElement triggerButton = localDriver.findElement(By.id("triggerButton"));
+    triggerButton.click();
 
     waitForDialog();
 
