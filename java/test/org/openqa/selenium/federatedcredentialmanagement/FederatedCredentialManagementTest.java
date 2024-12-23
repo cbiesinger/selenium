@@ -53,10 +53,6 @@ class FederatedCredentialManagementTest {
   public void setup() {
     ChromeOptions options = (ChromeOptions) CHROME.getCapabilities();
     options.setAcceptInsecureCerts(true);
-    options.addArguments(
-        String.format("host-resolver-rules=MAP localhost:443 localhost:%d", getSecurePort()));
-    options.addArguments("ignore-certificate-errors");
-    options.addArguments("--enable-fedcm-without-well-known-enforcement");
     localDriver = new ChromeDriver(options);
 
     assumeThat(localDriver).isInstanceOf(HasFederatedCredentialManagement.class);
