@@ -56,7 +56,6 @@ public class HandlersForTests implements Routable {
                                 .setContent(Contents.string("<h1>authorized</h1>", UTF_8)))
                 .with(new BasicAuthenticationFilter("test", "test")),
             Route.get("/.well-known/web-identity").to(WellKnownWebIdentityHandler::new),
-            Route.get("/fedcm/config.json").to(FedCmConfigHandler::new),
             Route.get("/echo").to(EchoHandler::new),
             Route.get("/cookie").to(CookieHandler::new),
             Route.post("/fedcm/id_assertion.json").to(FedCmIdAssertion::new),
