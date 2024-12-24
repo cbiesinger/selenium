@@ -74,9 +74,7 @@ class FederatedCredentialManagementTest {
   void testDismissDialog() {
     fedcmDriver.setDelayEnabled(false);
     assertNull(fedcmDriver.getFederatedCredentialManagementDialog());
-
-    // ((JavascriptExecutor) localDriver).executeScript("triggerFedCm();");
-
+    
     WebElement triggerButton = localDriver.findElement(By.id("triggerButton"));
     triggerButton.click();
 
@@ -98,9 +96,7 @@ class FederatedCredentialManagementTest {
   @Test
   void testSelectAccount() {
     assertNull(fedcmDriver.getFederatedCredentialManagementDialog());
-
-    // ((JavascriptExecutor) localDriver).executeScript("triggerFedCm();");
-
+    
     WebElement triggerButton = localDriver.findElement(By.id("triggerButton"));
     triggerButton.click();
     waitForDialog();
@@ -120,9 +116,7 @@ class FederatedCredentialManagementTest {
   @Test
   void testGetAccounts() {
     assertNull(fedcmDriver.getFederatedCredentialManagementDialog());
-
-    // ((JavascriptExecutor) localDriver).executeScript("triggerFedCm();");
-
+    
     WebElement triggerButton = localDriver.findElement(By.id("triggerButton"));
     triggerButton.click();
 
