@@ -23,6 +23,8 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.openqa.selenium.testing.drivers.Browser.CHROME;
 
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.time.Duration;
 import java.util.List;
 import org.junit.jupiter.api.AfterEach;
@@ -42,18 +44,32 @@ class FederatedCredentialManagementTest {
 
   private HasFederatedCredentialManagement fedcmDriver;
   private WebDriver localDriver;
-  InProcessTestEnvironment environment = new InProcessTestEnvironment(false);
+  InProcessTestEnvironment environment = new InProcessTestEnvironment(true);
   AppServer appServer = environment.getAppServer();
 
   @BeforeEach
   public void setup() {
     ChromeOptions options = (ChromeOptions) CHROME.getCapabilities();
     options.setAcceptInsecureCerts(true);
+    options.addArguments(
+        String.format("host-resolver-rules=MAP localhost:443 localhost:%d", getSecurePort()));
+    options.addArguments("ignore-certificate-errors");
+    options.addArguments("--enable-fedcm-without-well-known-enforcement");
     localDriver = new ChromeDriver(options);
 
     assumeThat(localDriver).isInstanceOf(HasFederatedCredentialManagement.class);
     fedcmDriver = (HasFederatedCredentialManagement) localDriver;
-    localDriver.get(appServer.whereIs("/fedcm/fedcm_async.html"));
+    localDriver.get(appServer.whereIsSecure("/fedcm/fedcm_async.html"));
+  }
+
+  private int getSecurePort() {
+    String urlString = appServer.whereIsSecure("/");
+    try {
+      return new URL(urlString).getPort();
+    } catch (MalformedURLException ex) {
+      // This should not happen.
+      return 0;
+    }
   }
 
   @AfterEach
